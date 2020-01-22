@@ -1,4 +1,4 @@
-package main
+package gotags
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ func (e ErrInvalidFields) Error() string {
 // currently only "+l" is supported
 var fieldsPattern = regexp.MustCompile(`^\+l$`)
 
-func parseFields(fields string) (FieldSet, error) {
+func ParseFields(fields string) (FieldSet, error) {
 	if fields == "" {
 		return FieldSet{}, nil
 	}

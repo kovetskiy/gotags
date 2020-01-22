@@ -1,4 +1,4 @@
-package main
+package gotags
 
 import "go/ast"
 

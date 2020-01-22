@@ -1,8 +1,7 @@
-package main
+package gotags
 
 import (
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"testing"
 )
@@ -10,13 +9,12 @@ import (
 type F map[TagField]string
 
 var testCases = []struct {
-	filename   string
-	relative   bool
-	basepath   string
-	minversion string
-	tags       []Tag
+	filename string
+	relative bool
+	basepath string
+	tags     []Tag
 }{
-	{filename: "tests/const.go-src", tags: []Tag{
+	{filename: "../../tests/const.go-src", tags: []Tag{
 		tag("Test", 1, 9, "p", F{}),
 		tag("Constant", 3, 7, "c", F{"access": "public", "type": "string"}),
 		tag("OtherConst", 4, 7, "c", F{"access": "public"}),
@@ -25,7 +23,7 @@ var testCases = []struct {
 		tag("C", 8, 5, "c", F{"access": "public"}),
 		tag("D", 9, 5, "c", F{"access": "public"}),
 	}},
-	{filename: "tests/func.go-src", tags: []Tag{
+	{filename: "../../tests/func.go-src", tags: []Tag{
 		tag("Test", 1, 9, "p", F{}),
 		tag("Function1", 3, 1, "f", F{"access": "public", "signature": "()", "type": "string"}),
 		tag("function2", 6, 1, "f", F{"access": "private", "signature": "(p1, p2 int, p3 *string)"}),
@@ -33,20 +31,20 @@ var testCases = []struct {
 		tag("function4", 12, 1, "f", F{"access": "private", "signature": "(p interface{})", "type": "interface{}"}),
 		tag("function5", 15, 1, "f", F{"access": "private", "signature": "()", "type": "string, string, error"}),
 	}},
-	{filename: "tests/import.go-src", tags: []Tag{
+	{filename: "../../tests/import.go-src", tags: []Tag{
 		tag("Test", 1, 9, "p", F{}),
 		tag("fmt", 3, 8, "i", F{}),
 		tag("go/ast", 6, 2, "i", F{}),
 		tag("go/parser", 7, 2, "i", F{}),
 	}},
-	{filename: "tests/interface.go-src", tags: []Tag{
+	{filename: "../../tests/interface.go-src", tags: []Tag{
 		tag("Test", 1, 9, "p", F{}),
 		tag("InterfaceMethod", 4, 2, "m", F{"access": "public", "signature": "(int)", "ntype": "Interface", "type": "string"}),
 		tag("OtherMethod", 5, 2, "m", F{"access": "public", "signature": "()", "ntype": "Interface"}),
 		tag("io.Reader", 6, 2, "e", F{"access": "public", "ntype": "Interface"}),
 		tag("Interface", 3, 6, "n", F{"access": "public", "type": "interface"}),
 	}},
-	{filename: "tests/struct.go-src", tags: []Tag{
+	{filename: "../../tests/struct.go-src", tags: []Tag{
 		tag("Test", 1, 9, "p", F{}),
 		tag("Field1", 4, 2, "w", F{"access": "public", "ctype": "Struct", "type": "int"}),
 		tag("Field2", 4, 10, "w", F{"access": "public", "ctype": "Struct", "type": "int"}),
@@ -68,7 +66,7 @@ var testCases = []struct {
 		tag("Dial3", 42, 1, "f", F{"access": "public", "signature": "()", "type": "*Connection, *Connection"}),
 		tag("s", 13, 7, "x", F{}),
 	}},
-	{filename: "tests/type.go-src", tags: []Tag{
+	{filename: "../../tests/type.go-src", tags: []Tag{
 		tag("Test", 1, 9, "p", F{}),
 		tag("testType", 3, 6, "t", F{"access": "private", "type": "int"}),
 		tag("testArrayType", 4, 6, "t", F{"access": "private", "type": "[4]int"}),
@@ -79,7 +77,7 @@ var testCases = []struct {
 		tag("testMapType", 9, 6, "t", F{"access": "private", "type": "map[string]bool"}),
 		tag("testChanType", 10, 6, "t", F{"access": "private", "type": "chan bool"}),
 	}},
-	{filename: "tests/var.go-src", tags: []Tag{
+	{filename: "../../tests/var.go-src", tags: []Tag{
 		tag("Test", 1, 9, "p", F{}),
 		tag("variable1", 3, 5, "v", F{"access": "private", "type": "int"}),
 		tag("variable2", 4, 5, "v", F{"access": "private", "type": "string"}),
@@ -88,15 +86,15 @@ var testCases = []struct {
 		tag("C", 8, 5, "v", F{"access": "public"}),
 		tag("D", 9, 5, "v", F{"access": "public"}),
 	}},
-	{filename: "tests/simple.go-src", relative: true, basepath: "dir", tags: []Tag{
-		Tag{Name: "main", File: "../tests/simple.go-src", Address: "1", Type: "p", Fields: F{"line": "1", "column": "9"}},
+	{filename: "../../tests/simple.go-src", relative: true, basepath: "dir", tags: []Tag{
+		Tag{Name: "main", File: "../../../tests/simple.go-src", Address: "1", Type: "p", Fields: F{"line": "1", "column": "9"}},
 	}},
-	{filename: "tests/range.go-src", minversion: "go1.4", tags: []Tag{
+	{filename: "../../tests/range.go-src", tags: []Tag{
 		tag("main", 1, 9, "p", F{}),
 		tag("fmt", 3, 8, "i", F{}),
 		tag("main", 5, 1, "f", F{"access": "private", "signature": "()"}),
 	}},
-	{filename: "tests/method.go-src", tags: []Tag{
+	{filename: "../../tests/method.go-src", tags: []Tag{
 		tag("main", 1, 9, "p", F{}),
 		tag("Struct", 3, 6, "t", F{"access": "public", "type": "struct"}),
 		tag("methodA", 8, 1, "m", F{"access": "private", "receiver": "s", "ctype": "Struct", "signature": "()"}),
@@ -110,11 +108,6 @@ var testCases = []struct {
 
 func TestParse(t *testing.T) {
 	for _, testCase := range testCases {
-		if testCase.minversion != "" && runtime.Version() < testCase.minversion {
-			t.Skipf("[%s] skipping test. Version is %s, but test requires %s", testCase.filename, runtime.Version(), testCase.minversion)
-			continue
-		}
-
 		basepath, err := filepath.Abs(testCase.basepath)
 		if err != nil {
 			t.Errorf("[%s] could not determine base path: %s\n", testCase.filename, err)

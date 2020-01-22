@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+
+	"github.com/kovetskiy/gotags/pkg/gotags"
 )
 
 // Contants used for the meta tags
@@ -171,16 +173,16 @@ func main() {
 		}
 	}
 
-	fieldSet, err := parseFields(fields)
+	fieldSet, err := gotags.ParseFields(fields)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n\n", err)
 		flags.Usage()
 		os.Exit(1)
 	}
 
-	tags := []Tag{}
+	tags := []gotags.Tag{}
 	for _, file := range files {
-		ts, err := Parse(file, relative, basedir)
+		ts, err := gotags.Parse(file, relative, basedir)
 		if err != nil {
 			if !silent {
 				fmt.Fprintf(os.Stderr, "parse error: %s\n\n", err)
@@ -192,8 +194,8 @@ func main() {
 
 	output := createMetaTags()
 	for _, tag := range tags {
-		if fieldSet.Includes(Language) {
-			tag.Fields[Language] = "Go"
+		if fieldSet.Includes(gotags.Language) {
+			tag.Fields[gotags.Language] = "Go"
 		}
 		output = append(output, tag.String())
 	}
